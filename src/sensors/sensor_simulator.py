@@ -130,6 +130,13 @@ class SensorSimulator():
 
     def run_threads(self, mode='log'):
         """
+        Creates and starts a different thread for each simulated sensor 
+        to publish simulated data. The data can be published using logs
+        or using mqtt.
+
+        Args:
+            mode (str): Mode to publish the simulated data. Options are
+                ['log', 'mqtt'].
         """
         if   mode == 'log' : target=self.print_log_sensor
         elif mode == 'mqtt': target=self.publish_mqtt_sensor
@@ -147,6 +154,7 @@ class SensorSimulator():
     
     def stop_threads(self):
         """
+        Stops and deletes the running threads of simulated sensors. 
         """
         self.stop_event.set()
         for thread in self.sensors_threads:

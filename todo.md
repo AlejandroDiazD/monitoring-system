@@ -1,6 +1,6 @@
 Sensors
 - [x] Sensor simulator script printing values in logs
-- [ ] Convert sensor simulator script into a class
+- [x] Convert sensor simulator script into a class
 - [ ] Sensor simulator publishing values in mqtt topics
 - [ ] Sensor simulator using simulated I2C input
 
