@@ -14,9 +14,11 @@ class SensorSimulator():
                  sensors: list[tuple[str, int]]):
         """
         Args:
-            sensors (list): [(sensor_type (str), sensor_period (int))]
+            sensors: List of sensors to simulate, in which each sensor
+                is represented by a tuple with the sensor type and the 
+                sensor period: [(sensor_type (str), sensor_period (int))]
 
-        An example input to init a class object is:
+        An example input to init the class is:
         sensors = [('humidity', 5), ('temperature', 1), ('temperature', 3)]
         """
         self.sensors = self._init_sensors(sensors)
@@ -28,10 +30,10 @@ class SensorSimulator():
         definition.
 
         Args:
-            sensors (list[tuple[str, int]]): List of sensors to validate
+            sensors: List of sensors to validate
         
         Returns:
-            sensors (list[tuple[str, int]]): List of sensors validated
+            sensors: List of sensors validated
         """
         if not isinstance(sensors, list):
             raise ValueError("Sensors values must be a list")
@@ -57,12 +59,12 @@ class SensorSimulator():
         Validates input sensors and returns them as a list of dictionaries.
 
         Args:
-            input_sensors (list): List of sensors as tuples
+            input_sensors: List of sensors as tuples
                 Example: [sensor1, sensor2, ...]
                 sensor (tuple): (sensor_type, sensor_period)
         
         Returns:
-            output_sensors (list): List of sensors as dictionaries
+            output_sensors: List of sensors as dictionaries
                 Example: [sensor1, sensor2, ...]
                 sensor (dict): {id: int, sensor_type: str, sensor_period: int}
         """
@@ -86,11 +88,11 @@ class SensorSimulator():
         Generates simulated sensor data.
 
         Args:
-            sensor_type (str): Type of sensor: temperature or humididy.
-            id (int): Sensor id.
+            sensor_type: Type of sensor: temperature or humididy.
+            id: Sensor id.
 
         Returns:
-            (dict): Simulated sensor in dictionary format
+            Simulated sensor in dictionary format
         """
         return {
             "id": id,
@@ -105,10 +107,10 @@ class SensorSimulator():
         Gets and publishes sensor data.
 
         Args:
-            sensor_type (str): Type of sensor: temperature or humididy.
-            id (int): Sensor id.
-            period (int): Period in seconds to get and publish the data.
-            stop_event (Event): Event to signal thread termination.
+            sensor_type: Type of sensor ['temperature', 'humididy'].
+            id: Sensor id.
+            period: Period in seconds to get and publish the data.
+            stop_event: Event to signal thread termination.
 
         Returns:
             Publishes sensor data at a given period (freq = 1/period).
@@ -128,14 +130,14 @@ class SensorSimulator():
         """
         raise NotImplementedError("MQTT publishing is not implemented yet.")
 
-    def run_threads(self, mode='log'):
+    def run_threads(self, mode: str = 'log'):
         """
         Creates and starts a different thread for each simulated sensor 
         to publish simulated data. The data can be published using logs
         or using mqtt.
 
         Args:
-            mode (str): Mode to publish the simulated data. Options are
+            mode: Mode to publish the simulated data. Options are
                 ['log', 'mqtt'].
         """
         if   mode == 'log' : target=self.print_log_sensor
