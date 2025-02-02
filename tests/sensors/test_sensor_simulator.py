@@ -1,69 +1,123 @@
-# tests/test_sensor_simulator.py
-
 import pytest
+import threading
+import time
+import re
+import logging
+
+# Import the class to be tested
 from src.sensors.sensor_simulator import SensorSimulator
 
-class TestSensorSimulator:
+# Fixture to initialize the SensorSimulator with sample sensors
+@pytest.fixture
+def sensor_simulator():
+    sensors = [('humidity', 5), ('temperature', 1)]
+    return SensorSimulator(sensors)
+
+# Test _validate_sensors with valid input
+def test_validate_sensors_valid_input(sensor_simulator):
     """
-    Test cases for the SensorSimulator class.
+    Test _validate_sensors with valid input.
     """
+    sensors = [('humidity', 5), ('temperature', 1)]
+    validated_sensors = sensor_simulator._validate_sensors(sensors)
+    assert validated_sensors == sensors
 
-    def test_valid_sensors(self):
-        """
-        Test that the class accepts and stores a valid list of sensors.
-        """
-        sensors = [('humidity', 5), ('temperature', 1)]
-        sensor_simulator = SensorSimulator(sensors)
-        assert sensor_simulator.sensors == sensors
+# Test _validate_sensors with invalid input (not a list)
+def test_validate_sensors_invalid_input_not_list(sensor_simulator):
+    """
+    Test _validate_sensors with invalid input (not a list).
+    """
+    output = "Sensors values must be a list"
+    with pytest.raises(ValueError, match=output):
+        sensor_simulator._validate_sensors("not_a_list")
 
-    def test_invalid_sensors_not_a_list(self):
-        """
-        Test that a ValueError is raised if the input is not a list.
-        """
-        with pytest.raises(ValueError) as exc_info:
-            SensorSimulator("not_a_list")
-        assert str(exc_info.value) == "Sensors values must be a list"
+# Test _validate_sensors with invalid input (not a tuple)
+def test_validate_sensors_invalid_input_not_tuple(sensor_simulator):
+    """
+    Test _validate_sensors with invalid input (not a tuple).
+    """
+    output = "Each sensor must be a tuple of 2 values."
+    with pytest.raises(ValueError, match=output):
+        sensor_simulator._validate_sensors([['humidity', 5]])
 
-    def test_invalid_sensors_not_a_tuple(self):
-        """
-        Test that a ValueError is raised if any sensor is not a tuple.
-        """
-        with pytest.raises(ValueError) as exc_info:
-            SensorSimulator([('humidity', 5), 'not_a_tuple'])
-        assert str(exc_info.value) == "Each sensor must be a tuple of 2 values."
+# Test _validate_sensors with invalid input (wrong types)
+def test_validate_sensors_invalid_input_wrong_types(sensor_simulator):
+    """
+    Test _validate_sensors with invalid input (wrong types).
+    """
+    output = "Each tuple must contain a sensor type (string) and sensor period (int)."
+    with pytest.raises(ValueError, match=re.escape(output)):
+        sensor_simulator._validate_sensors([(5, 'humidity')])
 
-    def test_invalid_sensors_tuple_length(self):
-        """
-        Test that a ValueError is raised if any tuple does not have exactly 
-        2 values.
-        """
-        with pytest.raises(ValueError) as exc_info:
-            SensorSimulator([('humidity', 5, 'extra_value')])
-        assert str(exc_info.value) == "Each sensor must be a tuple of 2 values."
+# Test _validate_sensors with invalid sensor type
+def test_validate_sensors_invalid_sensor_type(sensor_simulator):
+    """
+    Test _validate_sensors with invalid sensor type.
+    """
+    output = f"Sensor type must be one of: {sensor_simulator.sensor_types}"
+    with pytest.raises(ValueError, match=re.escape(output)):
+        sensor_simulator._validate_sensors([('invalid_type', 5)])
 
-    def test_invalid_sensor_type_not_string(self):
-        """
-        Test that a ValueError is raised if the sensor type is not a string.
-        """
-        with pytest.raises(ValueError) as exc_info:
-            SensorSimulator([(123, 5)])  # 123 is not a string
-        assert "Each tuple must contain a sensor type (string)" in str(exc_info.value)
+# Test _init_sensors with valid input
+def test_init_sensors(sensor_simulator):
+    """
+    Test _init_sensors with valid input.
+    """
+    sensors = [('humidity', 5), ('temperature', 1)]
+    initialized_sensors = sensor_simulator._init_sensors(sensors)
+    expected_sensors = [
+        {'id': 0, 'type': 'humidity', 'period': 5},
+        {'id': 1, 'type': 'temperature', 'period': 1}
+    ]
+    assert initialized_sensors == expected_sensors
 
-    def test_invalid_sensor_frequency_not_int(self):
-        """
-        Test that a ValueError is raised if the sensor frequency is not an 
-        integer.
-        """
-        with pytest.raises(ValueError) as exc_info:
-            SensorSimulator([('humidity', 'not_an_int')])  # 'not_an_int' is not an int
-        assert "sensor frequency (int)" in str(exc_info.value)
+# Test generate_sensor_data
+def test_generate_sensor_data(sensor_simulator):
+    """
+    Test generate_sensor_data.
+    """
+    data = sensor_simulator.generate_sensor_data('humidity', 5, 0)
+    assert 'id' in data
+    assert 'type' in data
+    assert 'period' in data
+    assert 'value' in data
+    assert 'timestamp' in data
+    assert data['type'] == 'humidity'
+    assert data['period'] == 5
+    assert data['id'] == 0
 
-    def test_invalid_sensor_type_not_in_allowed_types(self):
-        """
-        Test that a ValueError is raised if the sensor type is not in the 
-        allowed types.
-        """
-        with pytest.raises(ValueError) as exc_info:
-            SensorSimulator([('invalid_type', 5)])  # 'invalid_type' is not allowed
-        expected_msg = f"Sensor type must be one of: {SensorSimulator.sensor_types}"
-        assert expected_msg in str(exc_info.value)
+# Test print_log_sensor
+def test_print_log_sensor(sensor_simulator, caplog):
+    """
+    Test print_log_sensor.
+    """
+    caplog.set_level(logging.INFO)
+    stop_event = threading.Event()
+    thread = threading.Thread(
+        target=sensor_simulator.print_log_sensor,
+        args=('humidity', 1, 0, stop_event)
+    )
+    thread.start()
+    time.sleep(2)  # Allow time for the thread to log data
+    stop_event.set()
+    thread.join()
+    assert 'data received' in caplog.text
+
+# Test run_threads
+def test_run_threads(sensor_simulator):
+    """
+    Test run_threads.
+    """
+    sensor_simulator.run_threads(mode='log')
+    assert len(sensor_simulator.sensors_threads) == 2
+    sensor_simulator.stop_threads()
+
+# Test stop_threads
+def test_stop_threads(sensor_simulator):
+    """
+    Test stop_threads.
+    """
+    sensor_simulator.run_threads(mode='log')
+    sensor_simulator.stop_threads()
+    for thread in sensor_simulator.sensors_threads:
+        assert not thread.is_alive()

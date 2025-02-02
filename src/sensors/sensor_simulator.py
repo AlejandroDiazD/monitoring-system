@@ -43,8 +43,7 @@ class SensorSimulator():
                 )
             if not isinstance(item[0], str) or not isinstance(item[1], int):
                 raise ValueError(
-                    """Each tuple must contain a sensor type (string) and 
-                    sensor period (int)."""
+                    "Each tuple must contain a sensor type (string) and sensor period (int)."
                 )
             if item[0] not in self.sensor_types:
                 raise ValueError(
@@ -152,4 +151,5 @@ class SensorSimulator():
         self.stop_event.set()
         for thread in self.sensors_threads:
             thread.join()
+        self.sensors_threads.clear()
         logging.info("All threads stopped.")
