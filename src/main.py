@@ -1,17 +1,20 @@
 import time
 import logging
 
-from sensors.sensor_simulator import SensorSimulator
+from src.sensors.sensor_simulator import SensorSimulator
 
 logging.basicConfig(level=logging.INFO)
+
+# Temporal solution for running code from cli: 
+# export PYTHONPATH=$(pwd):$PYTHONPATH
 
 def main():
 
     sensors = [('humidity', 3), ('temperature', 1)]
-    sensor_simulator = SensorSimulator(sensors)
+    sensor_simulator = SensorSimulator(sensors, 'mqtt', 'simulator')
 
     try:
-        sensor_simulator.run_threads('log')
+        sensor_simulator.run_threads()
         while True:
             time.sleep(1)
 

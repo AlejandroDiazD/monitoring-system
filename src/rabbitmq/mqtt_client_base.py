@@ -24,8 +24,14 @@ class MQTTClientBase:
         self.keepalive = keepalive
         
         self.client = mqtt.Client(
-            client_id=self.client_id, 
-            callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
+            callback_api_version    = mqtt.CallbackAPIVersion.VERSION1,
+            client_id               = self.client_id, 
+            clean_session           = True,
+            userdata                = None,
+            protocol                = mqtt.MQTTv311,
+            transport               = 'tcp',
+            )
+        
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
         self.client.on_message = self.on_message
@@ -36,58 +42,92 @@ class MQTTClientBase:
         self.logger = logging.getLogger(__name__)
     
     def on_connect(self, client, userdata, flags, rc):
-        """Callback when the client connects to the broker."""
+        """
+        Callback when the client connects to the broker.
+        """
         if rc == 0:
-            self.logger.info("Connected to MQTT Broker successfully.")
+            self.logger.info("Connected to MQTT Broker successfully.\n")
         else:
             self.logger.error(f"Failed to connect, return code {rc}")
 
     def on_disconnect(self, client, userdata, rc):
-        """Callback when the client disconnects from the broker."""
+        """
+        Callback when the client disconnects from the broker.
+        """
         self.logger.info("Disconnected from MQTT Broker.")
 
     def on_message(self, client, userdata, message):
-        """Callback when a message is received."""
+        """
+        Callback when a message is received.
+        """
         self.logger.info(f"Received message on {message.topic}: {message.payload.decode()}")
 
     def on_subscribe(self, client, userdata, mid, granted_qos):
-        """Callback when a subscription is successful."""
+        """
+        Callback when a subscription is successful.
+        """
         self.logger.info(f"Subscribed successfully, MID: {mid}, QoS: {granted_qos}")
 
     def on_publish(self, client, userdata, mid):
-        """Callback when a message is published."""
+        """
+        Callback when a message is published.
+        """
         self.logger.info(f"Message published successfully, MID: {mid}")
     
     def connect(self):
-        """Connect to the MQTT broker."""
-        self.client.connect(self.broker, self.port, self.keepalive)
+        """
+        Connect to the MQTT broker.
+        """
+        try:
+            self.client.connect(self.broker, self.port, self.keepalive)
+            logging.info(f"Connecting to broker...")
+            logging.info(f"Broker: {self.broker}, Port: {self.port}, Client_id: {self.client_id}, Keepalive: {self.keepalive}\n")
+            self.client.loop_start()
+
+        except Exception as e:
+            logging.error(f"Broker connection failed. {type(e)}, {e}")
+
     
     def disconnect(self):
-        """Disconnect from the MQTT broker."""
+        """
+        Disconnect from the MQTT broker.
+        """
         self.client.disconnect()
     
     def subscribe(self, topic: str, qos: int = 0):
-        """Subscribe to a topic."""
+        """
+        Subscribe to a topic.
+        """
         self.client.subscribe(topic, qos)
     
     def unsubscribe(self, topic: str):
-        """Unsubscribe from a topic."""
+        """
+        Unsubscribe from a topic.
+        """
         self.client.unsubscribe(topic)
     
     def publish(self, topic: str, payload: str, qos: int = 0, retain: bool = False):
-        """Publish a message to a topic."""
+        """
+        Publish a message to a topic.
+        """
         self.client.publish(topic, payload, qos, retain)
     
     def loop_start(self):
-        """Start the MQTT network loop in a separate thread."""
+        """
+        Start the MQTT network loop in a separate thread.
+        """
         self.client.loop_start()
     
     def loop_stop(self):
-        """Stop the MQTT network loop."""
+        """
+        Stop the MQTT network loop.
+        """
         self.client.loop_stop()
     
     def loop_forever(self):
-        """Run the network loop forever (blocking)."""
+        """
+        Run the network loop forever (blocking).
+        """
         self.client.loop_forever()
 
 # Example usage:
