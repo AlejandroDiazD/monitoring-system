@@ -38,7 +38,6 @@ class SensorSimulator(MQTTClientBase):
             self._init_mqtt_client(broker, port, client_id, keepalive)
         logging.info(f"Sensor simulator running in '{mode}' mode")
             
-
     def _validate_sensors(self, sensors: list[tuple[str, int]]
             ) -> list[tuple[str, int]]:
         """
@@ -197,7 +196,6 @@ class SensorSimulator(MQTTClientBase):
                 logging.info(f'data published: {json.dumps(data)}')
         except Exception as e:
             logging.error(f"Error in thread for sensor {id}: {e}")
-
 
     def run_threads(self):
         """
