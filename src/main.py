@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 def main():
 
     sensors = [('humidity', 3), ('temperature', 1)]
-    sensor_simulator = SensorSimulator(sensors, 'mqtt', 'simulator')
+    sensor_simulator = SensorSimulator(sensors, 'mqtt', 'simulator_client')
 
     try:
         sensor_simulator.run_threads()
