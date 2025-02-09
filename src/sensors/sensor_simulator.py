@@ -173,7 +173,7 @@ class SensorSimulator(MQTTClientBase):
 
     def publish_mqtt_sensor(self, sensor_type: str, period: int, id: int,
                             stop_event: threading.Event,
-                            topic: str = "test", qos: int = 1, 
+                            topic: str = "simulated_sensors/", qos: int = 1, 
                             retain: bool = False):
         """
         Gets and publishes sensor data in a given mqtt topic.
